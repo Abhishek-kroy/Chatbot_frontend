@@ -1,5 +1,5 @@
 export const getChatResponse = async (content, isComplex = false) => {
-  const res = await fetch('http://localhost:4000/api/chat', {
+  const res = await fetch('https://chatbot-backend-gray.vercel.app/api/chat', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

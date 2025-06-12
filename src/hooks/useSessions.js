@@ -9,7 +9,7 @@ const useSessions = (idToken) => {
     if (!idToken) return;
     setIsLoading(true);
     try {
-      const res = await fetch('http://localhost:4000/api/sessions', {
+      const res = await fetch('https://chatbot-backend-gray.vercel.app//api/sessions', {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },

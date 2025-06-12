@@ -1,5 +1,5 @@
 export const speakText = async (text) => {
-  const res = await fetch('http://localhost:4000/api/speak', {
+  const res = await fetch('https://chatbot-backend-gray.vercel.app/api/speak', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
