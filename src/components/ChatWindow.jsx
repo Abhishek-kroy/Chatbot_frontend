@@ -203,8 +203,6 @@ const ChatWindow = ({darkMode,toggleDarkMode}) => {
           </div>
         </div>
 
-        {/* Hi There */}
-
 
         {/* Messages Area */}
         <div className={`flex-1 overflow-y-auto ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
