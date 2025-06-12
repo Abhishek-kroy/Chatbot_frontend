@@ -1,5 +1,5 @@
 export const speakText = async (text) => {
-  const res = await fetch('https://chatbot-backend-gray.vercel.app/api/speak', {
+  const res = await fetch('https://chatbot-backend-wp2r.onrender.com/api/speak', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

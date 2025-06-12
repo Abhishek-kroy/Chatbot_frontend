@@ -35,7 +35,7 @@ const useChat = ({ enableTTS = true, isComplex = false } = {}) => {
 
       const idToken = await currentUser.getIdToken();
 
-      const response = await fetch('https://chatbot-backend-gray.vercel.app/api/chat', {
+      const response = await fetch('https://chatbot-backend-wp2r.onrender.com/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

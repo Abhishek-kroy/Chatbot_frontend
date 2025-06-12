@@ -44,7 +44,7 @@ const ChatWindow = ({darkMode,toggleDarkMode}) => {
 
       const idToken = await currentUser.getIdToken();
 
-      const response = await fetch('https://chatbot-backend-gray.vercel.app/api/sessions', {
+      const response = await fetch('https://chatbot-backend-wp2r.onrender.com/sessions', {
         headers: {
           Authorization: `Bearer ${idToken}`
         }
@@ -72,7 +72,7 @@ const ChatWindow = ({darkMode,toggleDarkMode}) => {
       if (!currentUser) throw new Error('User not authenticated');
 
       const idToken = await currentUser.getIdToken();
-      const res = await fetch(`https://chatbot-backend-gray.vercel.app/api/sessions/${sessionRef}`, {
+      const res = await fetch(`https://chatbot-backend-wp2r.onrender.com/api/sessions/${sessionRef}`, {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },
@@ -98,7 +98,7 @@ const ChatWindow = ({darkMode,toggleDarkMode}) => {
 
       const idToken = await currentUser.getIdToken();
 
-      const response = await fetch(`https://chatbot-backend-gray.vercel.app/api/sessions/${sessionRef}`, {
+      const response = await fetch(`https://chatbot-backend-wp2r.onrender.com/sessions/${sessionRef}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${idToken}`

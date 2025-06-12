@@ -9,7 +9,7 @@ const useSessions = (idToken) => {
     if (!idToken) return;
     setIsLoading(true);
     try {
-      const res = await fetch('https://chatbot-backend-gray.vercel.app//api/sessions', {
+      const res = await fetch('https://chatbot-backend-wp2r.onrender.com/api/sessions', {
         headers: {
           Authorization: `Bearer ${idToken}`,
         },
