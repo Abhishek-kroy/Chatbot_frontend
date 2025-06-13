@@ -43,3 +43,15 @@ function App() {
 }
 
 export default App;
+import AudioTranscriber from './components/AudioTranscriber';
+
+// function App() {
+
+//   return (
+//     <div className="h-screen bg-gray-100 dark:bg-gray-900 transition-all duration-300 ease-in-out">
+//       <AudioTranscriber/>
+//     </div>
+//   );
+// }
+
+// export default App;

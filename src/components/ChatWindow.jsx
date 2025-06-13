@@ -27,13 +27,13 @@ const ChatWindow = ({darkMode,toggleDarkMode}) => {
     clearError
   } = useChat();
 
-  // const scrollToBottom = () => {
-  //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  // };
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
-  // useEffect(() => {
-  //   scrollToBottom();
-  // }, [messages]);
+  useEffect(() => {
+    scrollToBottom();
+  }, [showHistory]);
 
   const fetchSessions = async () => {
     setIsLoadingHistory(true);
