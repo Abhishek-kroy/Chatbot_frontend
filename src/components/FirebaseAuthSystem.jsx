@@ -599,15 +599,19 @@ const EnhancedFirebaseAuth = ({ onAuthSuccess, darkMode }) => {
                 <div className="flex-1 border-t border-white/20"></div>
               </div>
 
+              <div className='text-center text-white/70 text-sm mb-4'>
+                Soon will be available
+              </div>
+
               {/* Google Sign In */}
-              <button
+              {/* <button
                 onClick={handleGoogle}
                 disabled={loading}
                 className="w-full bg-white/10 hover:bg-white/15 border border-white/20 hover:border-white/30 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 flex items-center justify-center space-x-3"
               >
                 <Chrome className="w-5 h-5" />
                 <span>Continue with Google</span>
-              </button>
+              </button> */}
 
               {/* Switch Mode */}
               <div className="text-center mt-8">
