@@ -210,7 +210,7 @@ const ChatInput = ({ onSendMessage, disabled, darkMode }) => {
       )}
 
       {/* Chat Input */}
-      <div className="flex items-end space-x-3 bg-transparent">
+      <div className="flex items-center space-x-2 w-full bg-transparent">
         <div className="flex-1 bg-transparent relative">
           <textarea
             ref={textareaRef}
@@ -256,7 +256,7 @@ const ChatInput = ({ onSendMessage, disabled, darkMode }) => {
           {recording ? (
             <>
               <MicOff size={20} />
-              <div className="absolute -inset-1 rounded-xl border-2 border-red-300 animate-pulse"></div>
+              <div className="absolute -inset-1 bottom-4 rounded-xl border-2 border-red-300 animate-pulse"></div>
             </>
           ) : (
             <Mic size={20} />
