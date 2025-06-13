@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
   Eye, EyeOff, Mail, Lock, User, CheckCircle,
-  AlertCircle, Chrome, Shield, Loader, Sparkles, Star,
-  RefreshCw, ArrowRight, X
+  AlertCircle, Chrome, Loader, ArrowRight, X
 } from 'lucide-react';
-
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendEmailVerification,
   updateProfile,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
+  onAuthStateChanged
 } from 'firebase/auth';
-
 import { auth, googleProvider } from '../firebase';
+import { getRedirectResult } from 'firebase/auth';
+
 
 const EnhancedFirebaseAuth = ({ onAuthSuccess, darkMode }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -25,8 +23,8 @@ const EnhancedFirebaseAuth = ({ onAuthSuccess, darkMode }) => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
-  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
   const [animateSwitch, setAnimateSwitch] = useState(false);
+  const [showPasswordRequirements, setShowPasswordRequirements] = useState(false);
 
   const [form, setForm] = useState({
     email: '',
@@ -37,26 +35,6 @@ const EnhancedFirebaseAuth = ({ onAuthSuccess, darkMode }) => {
 
   const [fieldErrors, setFieldErrors] = useState({});
   const [touchedFields, setTouchedFields] = useState({});
-
-  useEffect(() => {
-  getRedirectResult(auth)
-    .then(async (result) => {
-      if (result?.user) {
-        const token = await result.user.getIdToken();
-        const user = await callBackend(isLogin ? 'signin' : 'signup', token);
-        if (onAuthSuccess) onAuthSuccess(user);
-        setMessage({
-          type: 'success',
-          text: `Google ${isLogin ? 'login' : 'signup'} successful!`
-        });
-        setLoading(false);
-      }
-    })
-    .catch((err) => {
-      setMessage({ type: 'error', text: getFirebaseErrorMessage(err) });
-      setLoading(false);
-    });
-}, []);
 
   // Password strength checker
   const checkPasswordStrength = (password) => {
@@ -69,44 +47,38 @@ const EnhancedFirebaseAuth = ({ onAuthSuccess, darkMode }) => {
     return strength;
   };
 
-  // Real-time validation
   useEffect(() => {
-    const errors = {};
-
-    if (touchedFields.email && form.email) {
-      if (!/\S+@\S+\.\S+/.test(form.email)) {
-        errors.email = 'Please enter a valid email address';
+  const handleRedirectResult = async () => {
+    try {
+      const result = await getRedirectResult(auth);
+      if (result?.user) {
+        onAuthSuccess && onAuthSuccess(result.user);
+        resetForm();
       }
+    } catch (err) {
+      console.error("Redirect error:", err);
+      setMessage({ type: 'error', text: getFirebaseErrorMessage(err) });
     }
+  };
 
-    if (touchedFields.password && form.password) {
-      if (form.password.length < 6) {
-        errors.password = 'Password must be at least 6 characters';
-      }
+  handleRedirectResult();
+}, []);
+
+  useEffect(() => {
+    const errs = {};
+    if (touchedFields.email && form.email && !/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Enter a valid email';
+    if (touchedFields.password && form.password.length < 6) errs.password = 'Min 6 characters';
+    if (!isLogin) {
+      if (touchedFields.name && !form.name.trim()) errs.name = 'Name required';
+      if (touchedFields.confirmPassword && form.password !== form.confirmPassword) errs.confirmPassword = 'Passwords must match';
     }
-
-    if (touchedFields.name && !isLogin && !form.name.trim()) {
-      errors.name = 'Name is required';
-    }
-
-    if (touchedFields.confirmPassword && !isLogin && form.password !== form.confirmPassword) {
-      errors.confirmPassword = 'Passwords do not match';
-    }
-
-    setFieldErrors(errors);
-
-    // Update password strength
-    if (form.password) {
-      setPasswordStrength(checkPasswordStrength(form.password));
-    }
+    setFieldErrors(errs);
+    setPasswordStrength(checkPasswordStrength(form.password));
   }, [form, touchedFields, isLogin]);
 
-  const getPasswordStrengthColor = () => {
-    if (passwordStrength <= 1) return 'bg-red-500';
-    if (passwordStrength <= 2) return 'bg-orange-500';
-    if (passwordStrength <= 3) return 'bg-yellow-500';
-    if (passwordStrength <= 4) return 'bg-blue-500';
-    return 'bg-green-500';
+
+  const handleBlur = (fieldName) => {
+    setTouchedFields(prev => ({ ...prev, [fieldName]: true }));
   };
 
   const getPasswordStrengthText = () => {
@@ -117,19 +89,12 @@ const EnhancedFirebaseAuth = ({ onAuthSuccess, darkMode }) => {
     return 'Very Strong';
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-    setTouchedFields(prev => ({ ...prev, [name]: true }));
-
-    // Clear global message when user starts typing
-    if (message.text) {
-      setMessage({ type: '', text: '' });
-    }
-  };
-
-  const handleBlur = (fieldName) => {
-    setTouchedFields(prev => ({ ...prev, [fieldName]: true }));
+  const getPasswordStrengthColor = () => {
+    if (passwordStrength <= 1) return 'bg-red-500';
+    if (passwordStrength <= 2) return 'bg-orange-500';
+    if (passwordStrength <= 3) return 'bg-yellow-500';
+    if (passwordStrength <= 4) return 'bg-blue-500';
+    return 'bg-green-500';
   };
 
   const validate = () => {
@@ -166,6 +131,63 @@ const EnhancedFirebaseAuth = ({ onAuthSuccess, darkMode }) => {
 
     return Object.keys(errors).length === 0;
   };
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+    if (!validate()) return;
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      let cred;
+      if (isLogin) {
+        cred = await signInWithEmailAndPassword(auth, form.email, form.password);
+        if (!cred.user.emailVerified) {
+          setMessage({ type: 'error', text: 'Verify your email first.' });
+          return;
+        }
+      } else {
+        cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
+        await updateProfile(cred.user, { displayName: form.name });
+        await sendEmailVerification(cred.user);
+        setEmailVerificationSent(true);
+        setMessage({ type: 'success', text: 'Account created! Check your email.' });
+        return;
+      }
+
+      onAuthSuccess && onAuthSuccess(cred.user);
+      resetForm();
+    } catch (err) {
+      setMessage({ type: 'error', text: getFirebaseErrorMessage(err) });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+  setLoading(true);
+  setMessage({ type: '', text: '' });
+
+  try {
+    // Try popup first
+    const result = await signInWithPopup(auth, googleProvider);
+    onAuthSuccess && onAuthSuccess(result.user);
+    resetForm();
+  } catch (err) {
+    if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+      try {
+        // Fallback to redirect
+        await signInWithRedirect(auth, googleProvider);
+      } catch (redirectError) {
+        setMessage({ type: 'error', text: getFirebaseErrorMessage(redirectError) });
+      }
+    } else {
+      setMessage({ type: 'error', text: getFirebaseErrorMessage(err) });
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   const FloatingParticles = () => (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -238,91 +260,6 @@ const EnhancedFirebaseAuth = ({ onAuthSuccess, darkMode }) => {
     }
   };
 
-  const handleSubmit = async () => {
-    if (!validate()) return;
-
-    setLoading(true);
-    setMessage({ type: '', text: '' });
-
-    try {
-      let cred;
-
-      if (isLogin) {
-        cred = await signInWithEmailAndPassword(auth, form.email, form.password);
-      } else {
-        cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
-
-        // Update display name
-        await updateProfile(cred.user, {
-          displayName: form.name
-        });
-
-        // Send email verification
-        await sendEmailVerification(cred.user);
-        setEmailVerificationSent(true);
-        setMessage({
-          type: 'success',
-          text: 'Account created! Please verify your email before logging in.'
-        });
-        setLoading(false);
-        return;
-      }
-
-      if (!cred.user.emailVerified) {
-        setMessage({
-          type: 'error',
-          text: 'Please verify your email before signing in.'
-        });
-        setLoading(false);
-        return;
-      }
-
-      const token = await cred.user.getIdToken();
-      const user = await callBackend(isLogin ? 'signin' : 'signup', token);
-
-      setMessage({ type: 'success', text: `${isLogin ? 'Login' : 'Signup'} successful!` });
-
-      // Clear form and notify parent
-      resetForm();
-      if (onAuthSuccess) onAuthSuccess(user);
-
-    } catch (err) {
-      setMessage({ type: 'error', text: getFirebaseErrorMessage(err) });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogle = async () => {
-  setLoading(true);
-  setMessage({ type: '', text: '' });
-
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-  try {
-    const authFn = isMobile ? signInWithRedirect : signInWithPopup;
-    const result = await authFn(auth, googleProvider);
-
-    // If signInWithPopup, handle result immediately:
-    if (result?.user) {
-      const token = await result.user.getIdToken();
-      const user = await callBackend(isLogin ? 'signin' : 'signup', token);
-      if (onAuthSuccess) onAuthSuccess(user);
-      setMessage({
-        type: 'success',
-        text: `Google ${isLogin ? 'login' : 'signup'} successful!`
-      });
-    }
-    // If redirect is used, flow will continue via useEffect
-  } catch (err) {
-    setMessage({ type: 'error', text: getFirebaseErrorMessage(err) });
-    setLoading(false);
-  } finally {
-    // For popup flow, loading stops here
-    if (!isMobile) setLoading(false);
-  }
-};
-
   const resendVerification = async () => {
     setLoading(true);
     try {
@@ -351,6 +288,17 @@ const EnhancedFirebaseAuth = ({ onAuthSuccess, darkMode }) => {
       setPasswordStrength(0);
       setAnimateSwitch(false);
     }, 300);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    setTouchedFields(prev => ({ ...prev, [name]: true }));
+
+    // Clear global message when user starts typing
+    if (message.text) {
+      setMessage({ type: '', text: '' });
+    }
   };
 
   const resetForm = () => {
