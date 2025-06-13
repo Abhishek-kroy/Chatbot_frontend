@@ -61,7 +61,7 @@ const ChatInput = ({ onSendMessage, disabled, darkMode }) => {
         formData.append('audio', audioBlob, 'recording.webm');
 
         try {
-          const res = await fetch('http://localhost:4000/api/talk', {
+          const res = await fetch('https://chatbot-backend-wp2r.onrender.com/api/talk', {
             method: 'POST',
             body: formData,
           });

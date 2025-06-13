@@ -10,7 +10,7 @@ import LoadingIndicator from './LoadingIndicator';
 import SessionPanel from './SessionPanel';
 
 const ChatWindow = ({darkMode,toggleDarkMode}) => {
-  const [showHistory, setShowHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(true);
   const [sessions, setSessions] = useState([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   
