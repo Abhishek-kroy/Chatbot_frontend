@@ -56,9 +56,10 @@ const ChatInput = ({ onSendMessage, disabled, darkMode }) => {
       };
 
       recorder.onstop = async () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'recording.webm');
+        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' }); // Keep recording as is
+        const file = new File([audioBlob], 'recording.mp3', { type: 'audio/mpeg' }); // Re-name for server
+        const formData = new FormData()
+        formData.append('audio', file);
 
         try {
           const res = await fetch('https://chatbot-backend-wp2r.onrender.com/api/talk', {
