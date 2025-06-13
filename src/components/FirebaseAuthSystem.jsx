@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Eye, EyeOff, Mail, Lock, User, CheckCircle,
   AlertCircle, Chrome, Shield, Loader, Sparkles, Star,
@@ -10,7 +10,7 @@ import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   updateProfile,
-  signInWithPopup,
+  signInWithRedirect, getRedirectResult
 } from 'firebase/auth';
 
 import { auth, googleProvider } from '../firebase';
@@ -46,6 +46,21 @@ const EnhancedFirebaseAuth = ({ onAuthSuccess, darkMode }) => {
     if (/[^A-Za-z0-9]/.test(password)) strength++;
     return strength;
   };
+
+  useEffect(() => {
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          const token = await result.user.getIdToken();
+          const user = await callBackend(isLogin ? 'signin' : 'signup', token);
+          if (onAuthSuccess) onAuthSuccess(user);
+          setMessage({ type: 'success', text: `Google ${isLogin ? 'login' : 'signup'} successful!` });
+        }
+      })
+      .catch((err) => {
+        setMessage({ type: 'error', text: getFirebaseErrorMessage(err) });
+      });
+  }, []);
 
   // Real-time validation
   useEffect(() => {
@@ -276,27 +291,11 @@ const EnhancedFirebaseAuth = ({ onAuthSuccess, darkMode }) => {
     setMessage({ type: '', text: '' });
 
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-
-      if (!result.user.emailVerified) {
-        setMessage({
-          type: 'error',
-          text: 'Please verify your email before proceeding.'
-        });
-        setLoading(false);
-        return;
-      }
-
-      const token = await result.user.getIdToken();
-      const user = await callBackend(isLogin ? 'signin' : 'signup', token);
-
-      setMessage({ type: 'success', text: `Google ${isLogin ? 'login' : 'signup'} successful!` });
-      if (onAuthSuccess) onAuthSuccess(user);
-
+      await signInWithRedirect(auth, googleProvider);
+      // No need to do anything after this, the user will be redirected.
     } catch (err) {
       setMessage({ type: 'error', text: getFirebaseErrorMessage(err) });
-    } finally {
-      setLoading(false);
+      setLoading(false); // You still need to stop the spinner if error occurs before redirect
     }
   };
 
