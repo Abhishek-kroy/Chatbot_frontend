@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Eye, EyeOff, Mail, Lock, User, CheckCircle,
   AlertCircle, Chrome, Shield, Loader, Sparkles, Star,
@@ -10,7 +10,9 @@ import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   updateProfile,
-  signInWithRedirect, getRedirectResult
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
 } from 'firebase/auth';
 
 import { auth, googleProvider } from '../firebase';
@@ -36,6 +38,26 @@ const EnhancedFirebaseAuth = ({ onAuthSuccess, darkMode }) => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [touchedFields, setTouchedFields] = useState({});
 
+  useEffect(() => {
+  getRedirectResult(auth)
+    .then(async (result) => {
+      if (result?.user) {
+        const token = await result.user.getIdToken();
+        const user = await callBackend(isLogin ? 'signin' : 'signup', token);
+        if (onAuthSuccess) onAuthSuccess(user);
+        setMessage({
+          type: 'success',
+          text: `Google ${isLogin ? 'login' : 'signup'} successful!`
+        });
+        setLoading(false);
+      }
+    })
+    .catch((err) => {
+      setMessage({ type: 'error', text: getFirebaseErrorMessage(err) });
+      setLoading(false);
+    });
+}, []);
+
   // Password strength checker
   const checkPasswordStrength = (password) => {
     let strength = 0;
@@ -46,21 +68,6 @@ const EnhancedFirebaseAuth = ({ onAuthSuccess, darkMode }) => {
     if (/[^A-Za-z0-9]/.test(password)) strength++;
     return strength;
   };
-
-  useEffect(() => {
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (result?.user) {
-          const token = await result.user.getIdToken();
-          const user = await callBackend(isLogin ? 'signin' : 'signup', token);
-          if (onAuthSuccess) onAuthSuccess(user);
-          setMessage({ type: 'success', text: `Google ${isLogin ? 'login' : 'signup'} successful!` });
-        }
-      })
-      .catch((err) => {
-        setMessage({ type: 'error', text: getFirebaseErrorMessage(err) });
-      });
-  }, []);
 
   // Real-time validation
   useEffect(() => {
@@ -287,17 +294,34 @@ const EnhancedFirebaseAuth = ({ onAuthSuccess, darkMode }) => {
   };
 
   const handleGoogle = async () => {
-    setLoading(true);
-    setMessage({ type: '', text: '' });
+  setLoading(true);
+  setMessage({ type: '', text: '' });
 
-    try {
-      await signInWithRedirect(auth, googleProvider);
-      // No need to do anything after this, the user will be redirected.
-    } catch (err) {
-      setMessage({ type: 'error', text: getFirebaseErrorMessage(err) });
-      setLoading(false); // You still need to stop the spinner if error occurs before redirect
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  try {
+    const authFn = isMobile ? signInWithRedirect : signInWithPopup;
+    const result = await authFn(auth, googleProvider);
+
+    // If signInWithPopup, handle result immediately:
+    if (result?.user) {
+      const token = await result.user.getIdToken();
+      const user = await callBackend(isLogin ? 'signin' : 'signup', token);
+      if (onAuthSuccess) onAuthSuccess(user);
+      setMessage({
+        type: 'success',
+        text: `Google ${isLogin ? 'login' : 'signup'} successful!`
+      });
     }
-  };
+    // If redirect is used, flow will continue via useEffect
+  } catch (err) {
+    setMessage({ type: 'error', text: getFirebaseErrorMessage(err) });
+    setLoading(false);
+  } finally {
+    // For popup flow, loading stops here
+    if (!isMobile) setLoading(false);
+  }
+};
 
   const resendVerification = async () => {
     setLoading(true);
