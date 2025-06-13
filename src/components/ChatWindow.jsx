@@ -44,7 +44,7 @@ const ChatWindow = ({darkMode,toggleDarkMode}) => {
 
       const idToken = await currentUser.getIdToken();
 
-      const response = await fetch('https://chatbot-backend-wp2r.onrender.com/sessions', {
+      const response = await fetch('https://chatbot-backend-wp2r.onrender.com/api/sessions', {
         headers: {
           Authorization: `Bearer ${idToken}`
         }
@@ -98,7 +98,7 @@ const ChatWindow = ({darkMode,toggleDarkMode}) => {
 
       const idToken = await currentUser.getIdToken();
 
-      const response = await fetch(`https://chatbot-backend-wp2r.onrender.com/sessions/${sessionRef}`, {
+      const response = await fetch(`https://chatbot-backend-wp2r.onrender.com/api/sessions/${sessionRef}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${idToken}`
