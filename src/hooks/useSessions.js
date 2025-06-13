@@ -40,6 +40,7 @@ const useSessions = (idToken) => {
 
   return {
     sessions,
+    setSessions,
     isLoading,
     refresh: fetchSessions
   };
