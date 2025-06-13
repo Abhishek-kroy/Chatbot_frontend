@@ -200,12 +200,6 @@ const ChatInput = ({ onSendMessage, disabled, darkMode }) => {
       {(sending || transcribing) && (
         <div className={`mb-2 px-3 py-2 rounded-lg text-sm flex items-center gap-2
           ${darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>
-          {sending && (
-            <>
-              <Loader2 size={16} className="animate-spin text-blue-500" />
-              <span>Sending message...</span>
-            </>
-          )}
           {transcribing && (
             <>
               <Loader2 size={16} className="animate-spin text-blue-500" />
