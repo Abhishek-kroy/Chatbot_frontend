@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import { Send, Mic, MicOff, XCircle } from 'lucide-react';
-const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
 
 const ChatInput = ({ onSendMessage, disabled, darkMode }) => {
   const [input, setInput] = useState('');
@@ -57,10 +56,9 @@ const ChatInput = ({ onSendMessage, disabled, darkMode }) => {
       };
 
       recorder.onstop = async () => {
-        const audioBlob = new Blob(chunksRef.current, { type: 'audio/mpeg' });
-
+        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
         try {
-            const res = await fetch('https://your-backend/api/talk', {
+            const res = await fetch('https://chatbot-backend-wp2r.onrender.com/api/talk', {
               method: 'POST',
               headers: {
                 'Content-Type': 'audio/webm',
